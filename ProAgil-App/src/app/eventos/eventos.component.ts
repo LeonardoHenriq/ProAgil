@@ -1,7 +1,12 @@
 import { Component, OnInit, TemplateRef } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { Evento } from '../_models/Evento';
 import { EventoService } from '../_services/evento.service';
+import { BsLocaleService, } from 'ngx-bootstrap/datepicker';
+import { ptBrLocale } from 'ngx-bootstrap/locale';
+import { defineLocale } from 'ngx-bootstrap/chronos';
+defineLocale('pt-br', ptBrLocale);
 
 @Component({
   selector: 'app-eventos',
@@ -15,14 +20,19 @@ export class EventosComponent implements OnInit {
   imagemMargem = 2;
   mostrarImagem = false;
   modalRef: BsModalRef;
+  registerForm: FormGroup;
 
   // tslint:disable-next-line:variable-name
   _filtroLista = '';
   constructor(
     private eventoService: EventoService
   , private modalService: BsModalService
+  , private fb: FormBuilder
+  , private localeService: BsLocaleService
   )
-  { }
+  {
+    this.localeService.use('pt-br');
+  }
 
   get filtroLista(): string {
      return this._filtroLista;
@@ -38,6 +48,7 @@ export class EventosComponent implements OnInit {
  }
   // tslint:disable-next-line:typedef
   ngOnInit() {
+    this.validation();
     this.getEventos();
   }
 
@@ -50,6 +61,23 @@ export class EventosComponent implements OnInit {
 
   alternarImagem(): void {
      this.mostrarImagem = !this.mostrarImagem;
+  }
+
+  // tslint:disable-next-line:typedef
+  validation() {
+    this.registerForm = this.fb.group({
+        tema: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(50)]],
+        local: ['', Validators.required],
+        dataEvento: ['', Validators.required],
+        imagemURL: ['', Validators.required],
+        qtdPessoas: ['', [Validators.required, Validators.max(120000)]],
+        telefone: ['', Validators.required],
+        email: ['', [Validators.required, Validators.email]],
+    });
+  }
+
+  salvarAlteracao() {
+
   }
 
   // tslint:disable-next-line:typedef
