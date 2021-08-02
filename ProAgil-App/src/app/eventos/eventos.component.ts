@@ -16,11 +16,13 @@ defineLocale('pt-br', ptBrLocale);
 export class EventosComponent implements OnInit {
   eventosFiltrados: Evento[];
   eventos: Evento[];
+  evento: Evento;
   imagemLargura = 50;
   imagemMargem = 2;
   mostrarImagem = false;
-  modalRef: BsModalRef;
   registerForm: FormGroup;
+  modoSalvar = 'post';
+  bodyDeletarEvento = '';
 
   // tslint:disable-next-line:variable-name
   _filtroLista = '';
@@ -43,8 +45,9 @@ export class EventosComponent implements OnInit {
   }
 
  // tslint:disable-next-line:typedef
- openModal(template: TemplateRef<any>) {
-   this.modalRef = this.modalService.show(template);
+ openModal(template: any) {
+   this.registerForm.reset();
+   template.show();
  }
   // tslint:disable-next-line:typedef
   ngOnInit() {
@@ -76,8 +79,46 @@ export class EventosComponent implements OnInit {
     });
   }
 
-  salvarAlteracao() {
+  // tslint:disable-next-line:typedef
+  salvarAlteracao(template: any) {
+     console.log(this.modoSalvar);
+     if (this.registerForm.valid){
+       if (this.modoSalvar === 'post'){
+       this.evento = Object.assign({}, this.registerForm.value);
+       this.eventoService.postEvento(this.evento).subscribe(
+          (novoEvento: Evento) => {
+           console.log(novoEvento);
+           template.hide();
+           this.getEventos();
+          }, error => {
+           console.log(error);
+         }
+       );
+       } else {
+        this.evento = Object.assign({id: this.evento.id}, this.registerForm.value);
+        this.eventoService.putEvento(this.evento).subscribe(
+           () => {
+            template.hide();
+            this.getEventos();
+           }, error => {
+            console.log(error);
+          }
+        );
+       }
+     }
+  }
+  // tslint:disable-next-line:typedef
+  editarEvento(evento: Evento, template: any){
+    this.modoSalvar = 'put';
+    this.openModal(template);
+    this.evento = evento;
+    this.registerForm.patchValue(evento);
+  }
 
+  // tslint:disable-next-line:typedef
+  novoEvento(template: any){
+    this.modoSalvar = 'post';
+    this.openModal(template);
   }
 
   // tslint:disable-next-line:typedef
@@ -91,6 +132,26 @@ export class EventosComponent implements OnInit {
       }, error => {
         console.log(error);
       });
+  }
+
+  // tslint:disable-next-line:typedef
+  excluirEvento(evento: Evento, template: any){
+    this.openModal(template);
+    this.evento = evento;
+    this.bodyDeletarEvento = `Tem certeza que deseja excluir o Evento: ${evento.tema}, Código: ${evento.id}`;
+  }
+
+  // tslint:disable-next-line:typedef
+  confirmeDelete(template: any){
+    console.log(this.evento.id);
+    this.eventoService.deleteEvento(this.evento.id).subscribe(
+      () => {
+        template.hide();
+        this.getEventos();
+      }, error => {
+        console.log(error);
+      }
+    );
   }
 
 }
